@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-display);
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+
+  --color-olive: #4a5d3a;
+  --color-olive-dark: #2f3d24;
+  --color-olive-light: #6b7d57;
+  --color-khaki: #cf9e52;
+  --color-khaki-dark: #a87a32;
+  --color-sand: #f5f0e6;
+  --color-ink: #1b1f17;
+  --color-steel: #468499;
+}
+
+body {
+  background: var(--color-sand);
+  color: var(--color-ink);
+}
