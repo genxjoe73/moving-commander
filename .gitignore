@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Reference material — kept locally, not versioned
+Starting Code/
+Docs/2021_MAX_4_Tariff.pdf
+
+# Node / Next.js (for the upcoming rebuild)
+node_modules/
+.next/
+out/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+!changes.joe.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp

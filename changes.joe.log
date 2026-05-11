@@ -1,0 +1,11 @@
+2026-05-07 16:00:00 GMT | claude:claude-sonnet-4-6 | CREATE | changes.joe.log | Created governance log at session start per Rule F.
+2026-05-07 16:00:30 GMT | claude:claude-sonnet-4-6 | RUN | Starting Code/ | Read rules.universal.md and explored Demo project structure for orientation per Rule I.
+2026-05-09 20:42:17 GMT | claude:claude-opus-4-7 | RUN | poppler install | Installed poppler via brew to enable PDF reading per Rule E.
+2026-05-09 20:48:29 GMT | claude:claude-opus-4-7 | CREATE | docs/tariff_extracted_rules.md | Recorded extracted MAX 4 rules incl. Item 22 hourly rounding; flagged pages 52-75 as pending.
+2026-05-09 20:49:51 GMT | claude:claude-opus-4-7 | EDIT | docs/tariff_extracted_rules.md | Recorded Item 225 Warehouse Pickup/Delivery rate table from page 62 image.
+2026-05-09 20:50:26 GMT | claude:claude-opus-4-7 | EDIT | docs/tariff_extracted_rules.md | Recorded Section 3 governing provisions and excess-distance/weight rules from page 65.
+2026-05-09 20:57:34 GMT | claude:claude-opus-4-7 | CREATE | docs/tariff_rates/section3_p66-p73.csv | Captured Section 3 transportation rate tables (pages 66-73) covering 1000-23999 lbs, 1-1000 miles, plus per-cwt overflow column.
+2026-05-09 20:59:18 GMT | claude:claude-opus-4-7 | EDIT | docs/tariff_extracted_rules.md | Recorded Section 4 local shipment hourly rates from page 75.
+2026-05-09 21:06:40 GMT | claude:claude-opus-4-7 | CREATE | docs/tariff_rates/section2b_p52-p61_*.md | Captured Section 2-Part B additional services rates: items 105 (packing), 115 (stop offs), 120 (extra labor), 125 (shuttle), 130 (bulky/additives), 135-140-160-165-170-172, 175-185-190-195-205-207, 210 (SIT), 216 (supervisory).
+2026-05-09 21:15:00 GMT | claude:claude-opus-4-7 | EDIT | docs/tariff_extracted_rules.md | Added Item 225 weight brackets 10000-23999 lbs and $2.80/cwt overflow from page 63; refreshed stale Pending section.
+2026-05-11 22:30:00 GMT | claude:claude-opus-4-7 | CREATE | .gitignore, .git/ | Initialized repo, added SSH deploy key for genxjoe73/moving-commander, gitignored Starting Code/, MAX 4 PDF, .DS_Store; kept changes.joe.log tracked. Switched stack memory Vercel -> Railway.
