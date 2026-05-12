@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Home() {
   return (
     <div className="flex flex-col flex-1">
@@ -16,11 +18,17 @@ function BrandBar() {
   return (
     <header className="bg-olive text-white">
       <div className="mx-auto max-w-6xl px-6 py-8 text-center">
-        <Wordmark />
-        <p className="font-body italic text-sand mt-2 text-base md:text-lg">
-          The Complete Moving Company Management Solution
-        </p>
-        <p className="font-display text-2xl md:text-4xl mt-6">
+        <div className="flex justify-center">
+          <Image
+            src="/logo-on-dark.svg"
+            alt="Moving Commander — The Complete Moving Company Management Solution"
+            width={506}
+            height={80}
+            priority
+            className="w-full max-w-xl h-auto"
+          />
+        </div>
+        <p className="font-display text-2xl md:text-4xl mt-8">
           Call For A FREE Demo:
           <br />
           <a
@@ -32,18 +40,6 @@ function BrandBar() {
         </p>
       </div>
     </header>
-  );
-}
-
-function Wordmark() {
-  return (
-    <div className="flex items-center justify-center gap-3 md:gap-5 font-display text-3xl md:text-5xl tracking-wide">
-      <span>MOVING</span>
-      <span className="text-khaki text-2xl md:text-3xl tracking-widest">
-        ★★★
-      </span>
-      <span>COMMANDER</span>
-    </div>
   );
 }
 
