@@ -127,6 +127,7 @@ a { color: inherit; }
 .tenant-table th, .tenant-table td { padding: 12px; border-bottom: 1px solid #dfe4ec; text-align: left; }
 .tenant-table th { color: var(--muted); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
 .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(320px, .75fr); gap: 24px; align-items: start; }
+.workspace-grid > * { min-width: 0; }
 .operations-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
 .workspace-panel { min-width: 0; padding: 28px; background: white; box-shadow: 0 5px 18px rgba(16,29,58,.08); }
 .workspace-panel h2 { margin: 4px 0 8px; font-family: var(--font-heading), sans-serif; font-size: 1.6rem; }
@@ -152,8 +153,8 @@ a { color: inherit; }
 .record-actions .primary-button, .record-actions .secondary-button { padding: 10px 13px; font-size: .85rem; }
 .record-form { display: grid; gap: 15px; }
 .record-form label { display: grid; gap: 6px; color: var(--navy); font-weight: 700; }
-.record-form input, .record-form textarea { width: 100%; border: 1px solid #aeb8c9; padding: 11px 12px; font: inherit; resize: vertical; }
-.record-form input:focus, .record-form textarea:focus, .record-actions select:focus { outline: 3px solid rgba(245,197,24,.45); border-color: var(--navy); }
+.record-form input, .record-form select, .record-form textarea { width: 100%; min-width: 0; max-width: 100%; border: 1px solid #aeb8c9; padding: 11px 12px; background: white; font: inherit; resize: vertical; }
+.record-form input:focus, .record-form select:focus, .record-form textarea:focus, .record-actions select:focus { outline: 3px solid rgba(245,197,24,.45); border-color: var(--navy); }
 .field-error { color: var(--red); font-weight: 400; }
 .data-table-wrap { overflow-x: auto; margin-top: 22px; }
 .data-table { width: 100%; border-collapse: collapse; }
