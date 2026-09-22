@@ -252,6 +252,49 @@ export const jobTruckAssignment = pgTable("job_truck_assignment", {
   ...timestamps,
 }, (table) => [index("job_truck_assignment_organization_idx").on(table.organizationId), uniqueIndex("job_truck_assignment_job_truck_uidx").on(table.jobId, table.truckId)]);
 
+export const jobStop = pgTable("job_stop", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  jobId: text("job_id").notNull().references(() => job.id, { onDelete: "cascade" }),
+  sequence: integer("sequence").default(1).notNull(),
+  stopType: text("stop_type").default("pickup").notNull(),
+  address: text("address").notNull(),
+  scheduledArrival: timestamp("scheduled_arrival", { withTimezone: true }),
+  notes: text("notes"),
+  ...timestamps,
+}, (table) => [index("job_stop_organization_idx").on(table.organizationId), index("job_stop_job_idx").on(table.jobId)]);
+
+export const jobNote = pgTable("job_note", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  jobId: text("job_id").notNull().references(() => job.id, { onDelete: "cascade" }),
+  authorUserId: text("author_user_id").references(() => user.id, { onDelete: "set null" }),
+  body: text("body").notNull(),
+  ...timestamps,
+}, (table) => [index("job_note_organization_idx").on(table.organizationId), index("job_note_job_idx").on(table.jobId)]);
+
+export const jobDamage = pgTable("job_damage", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  jobId: text("job_id").notNull().references(() => job.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  location: text("location"),
+  status: text("status").default("reported").notNull(),
+  estimatedAmount: numeric("estimated_amount", { precision: 14, scale: 2 }).default("0").notNull(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [index("job_damage_organization_idx").on(table.organizationId), index("job_damage_job_idx").on(table.jobId)]);
+
+export const jobCharge = pgTable("job_charge", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  jobId: text("job_id").notNull().references(() => job.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+  status: text("status").default("pending").notNull(),
+  ...timestamps,
+}, (table) => [index("job_charge_organization_idx").on(table.organizationId), index("job_charge_job_idx").on(table.jobId)]);
+
 export const jobContract = pgTable("job_contract", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
@@ -339,6 +382,10 @@ export const truckRelations = relations(truck, ({ one, many }) => ({ organizatio
 export const jobCrewAssignmentRelations = relations(jobCrewAssignment, ({ one }) => ({ organization: one(organization, { fields: [jobCrewAssignment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobCrewAssignment.jobId], references: [job.id] }), crew: one(crew, { fields: [jobCrewAssignment.crewId], references: [crew.id] }) }));
 export const jobEmployeeAssignmentRelations = relations(jobEmployeeAssignment, ({ one }) => ({ organization: one(organization, { fields: [jobEmployeeAssignment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobEmployeeAssignment.jobId], references: [job.id] }), employee: one(employee, { fields: [jobEmployeeAssignment.employeeId], references: [employee.id] }) }));
 export const jobTruckAssignmentRelations = relations(jobTruckAssignment, ({ one }) => ({ organization: one(organization, { fields: [jobTruckAssignment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobTruckAssignment.jobId], references: [job.id] }), truck: one(truck, { fields: [jobTruckAssignment.truckId], references: [truck.id] }) }));
+export const jobStopRelations = relations(jobStop, ({ one }) => ({ organization: one(organization, { fields: [jobStop.organizationId], references: [organization.id] }), job: one(job, { fields: [jobStop.jobId], references: [job.id] }) }));
+export const jobNoteRelations = relations(jobNote, ({ one }) => ({ organization: one(organization, { fields: [jobNote.organizationId], references: [organization.id] }), job: one(job, { fields: [jobNote.jobId], references: [job.id] }), author: one(user, { fields: [jobNote.authorUserId], references: [user.id] }) }));
+export const jobDamageRelations = relations(jobDamage, ({ one }) => ({ organization: one(organization, { fields: [jobDamage.organizationId], references: [organization.id] }), job: one(job, { fields: [jobDamage.jobId], references: [job.id] }) }));
+export const jobChargeRelations = relations(jobCharge, ({ one }) => ({ organization: one(organization, { fields: [jobCharge.organizationId], references: [organization.id] }), job: one(job, { fields: [jobCharge.jobId], references: [job.id] }) }));
 export const jobContractRelations = relations(jobContract, ({ one }) => ({ organization: one(organization, { fields: [jobContract.organizationId], references: [organization.id] }), job: one(job, { fields: [jobContract.jobId], references: [job.id] }) }));
 export const jobPaymentRelations = relations(jobPayment, ({ one }) => ({ organization: one(organization, { fields: [jobPayment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobPayment.jobId], references: [job.id] }) }));
 export const storageRecordRelations = relations(storageRecord, ({ one, many }) => ({ organization: one(organization, { fields: [storageRecord.organizationId], references: [organization.id] }), job: one(job, { fields: [storageRecord.jobId], references: [job.id] }), customer: one(customer, { fields: [storageRecord.customerId], references: [customer.id] }), items: many(storageItem) }));

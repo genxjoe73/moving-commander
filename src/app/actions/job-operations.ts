@@ -5,13 +5,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { auditLog, crew, employee, job, jobContract, jobCrewAssignment, jobEmployeeAssignment, jobPayment, jobTruckAssignment, storageItem, storageRecord, truck } from "@/db/app-schema";
+import { auditLog, crew, employee, job, jobCharge, jobContract, jobCrewAssignment, jobDamage, jobEmployeeAssignment, jobNote, jobPayment, jobStop, jobTruckAssignment, storageItem, storageRecord, truck } from "@/db/app-schema";
 import { requireTenantRole } from "@/lib/tenant";
 import { rangesOverlap } from "@/lib/scheduling";
 
 const id = z.string().uuid();
 const jobId = (formData: FormData) => id.parse(formData.get("jobId"));
 const text = (max: number) => z.string().trim().max(max);
+const dateInput = z.string().trim().refine((value) => !value || !Number.isNaN(Date.parse(value)), "Enter a valid date and time.");
 
 export async function createCrew(formData: FormData) {
   const tenant = await requireTenantRole(["owner", "admin"]);
@@ -91,6 +92,58 @@ export async function assignTruck(formData: FormData) {
     await tx.insert(jobTruckAssignment).values({ organizationId: tenant.organization.id, jobId: currentJobId, truckId, role }).onConflictDoNothing();
     await tx.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.truck_assigned", entityType: "job", entityId: currentJobId, metadata: { truckId, role } });
   });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+}
+
+export async function addJobStop(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const sequence = z.coerce.number().int().min(1).max(100).parse(formData.get("sequence"));
+  const stopType = text(40).parse(formData.get("stopType") || "pickup");
+  const address = text(500).min(1).parse(formData.get("address"));
+  const scheduledArrivalValue = dateInput.parse(formData.get("scheduledArrival") || "");
+  const notes = text(2000).parse(formData.get("notes") || "") || null;
+  const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, currentJobId), eq(job.organizationId, tenant.organization.id))).limit(1);
+  if (!ownedJob) throw new Error("Job not found in this company.");
+  const [created] = await db.insert(jobStop).values({ organizationId: tenant.organization.id, jobId: currentJobId, sequence, stopType, address, scheduledArrival: scheduledArrivalValue ? new Date(scheduledArrivalValue) : null, notes }).returning({ id: jobStop.id });
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.stop_added", entityType: "job", entityId: currentJobId, metadata: { stopId: created.id, sequence, stopType } });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+}
+
+export async function addJobNote(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const body = text(5000).min(1).parse(formData.get("body"));
+  const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, currentJobId), eq(job.organizationId, tenant.organization.id))).limit(1);
+  if (!ownedJob) throw new Error("Job not found in this company.");
+  const [created] = await db.insert(jobNote).values({ organizationId: tenant.organization.id, jobId: currentJobId, authorUserId: tenant.session.user.id, body }).returning({ id: jobNote.id });
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.note_added", entityType: "job", entityId: currentJobId, metadata: { noteId: created.id } });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+}
+
+export async function reportJobDamage(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const description = text(1000).min(1).parse(formData.get("description"));
+  const location = text(200).parse(formData.get("location") || "") || null;
+  const estimatedAmount = z.coerce.number().finite().min(0).max(100000000).parse(formData.get("estimatedAmount"));
+  const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, currentJobId), eq(job.organizationId, tenant.organization.id))).limit(1);
+  if (!ownedJob) throw new Error("Job not found in this company.");
+  const [created] = await db.insert(jobDamage).values({ organizationId: tenant.organization.id, jobId: currentJobId, description, location, estimatedAmount: estimatedAmount.toFixed(2) }).returning({ id: jobDamage.id });
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.damage_reported", entityType: "job", entityId: currentJobId, metadata: { damageId: created.id, estimatedAmount } });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+}
+
+export async function addJobCharge(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const description = text(500).min(1).parse(formData.get("description"));
+  const amount = z.coerce.number().finite().positive().max(100000000).parse(formData.get("amount"));
+  const status = z.enum(["pending", "approved", "invoiced", "waived"]).parse(formData.get("status"));
+  const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, currentJobId), eq(job.organizationId, tenant.organization.id))).limit(1);
+  if (!ownedJob) throw new Error("Job not found in this company.");
+  const [created] = await db.insert(jobCharge).values({ organizationId: tenant.organization.id, jobId: currentJobId, description, amount: amount.toFixed(2), status }).returning({ id: jobCharge.id });
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.charge_added", entityType: "job", entityId: currentJobId, metadata: { chargeId: created.id, amount, status } });
   revalidatePath(`/app/jobs/${currentJobId}`);
 }
 
