@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { LeadsWorkspace } from "@/components/leads-workspace";
 import { CustomersWorkspace } from "@/components/customers-workspace";
 import { QuotesWorkspace } from "@/components/quotes-workspace";
+import { JobsWorkspace } from "@/components/jobs-workspace";
 import { requireTenant } from "@/lib/tenant";
 
 const modules: Record<string, { title: string; description: string }> = {
@@ -18,6 +19,7 @@ export default async function ModulePage({ params }: { params: Promise<{ module:
   if (module === "leads") return <LeadsWorkspace />;
   if (module === "customers") return <CustomersWorkspace />;
   if (module === "quotes") return <QuotesWorkspace />;
+  if (module === "jobs") return <JobsWorkspace />;
   await requireTenant();
   const item = modules[module];
   if (!item) notFound();

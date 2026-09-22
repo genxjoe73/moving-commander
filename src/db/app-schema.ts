@@ -113,13 +113,55 @@ export const quote = pgTable("quote", {
   leadId: text("lead_id").references(() => lead.id, { onDelete: "set null" }),
   quoteNumber: text("quote_number").notNull(),
   status: quoteStatus("status").default("draft").notNull(),
+  pricingModel: text("pricing_model").default("local_hourly").notNull(),
+  tariffRule: text("tariff_rule").default("local_max_2018").notNull(),
   moveDate: timestamp("move_date", { withTimezone: true }),
+  quoteDate: timestamp("quote_date", { withTimezone: true }).defaultNow().notNull(),
   originAddress: text("origin_address"),
   destinationAddress: text("destination_address"),
+  fromCity: text("from_city"),
+  fromState: text("from_state"),
+  fromPostalCode: text("from_postal_code"),
+  toCity: text("to_city"),
+  toState: text("to_state"),
+  toPostalCode: text("to_postal_code"),
+  estimatedHours: numeric("estimated_hours", { precision: 10, scale: 2 }).default("0").notNull(),
+  foremanCount: numeric("foreman_count", { precision: 10, scale: 2 }).default("0").notNull(),
+  moverCount: numeric("mover_count", { precision: 10, scale: 2 }).default("1").notNull(),
+  truckCount: numeric("truck_count", { precision: 10, scale: 2 }).default("1").notNull(),
+  equipmentCount: numeric("equipment_count", { precision: 10, scale: 2 }).default("0").notNull(),
+  estimatedWeight: numeric("estimated_weight", { precision: 12, scale: 2 }).default("0").notNull(),
+  tripMiles: numeric("trip_miles", { precision: 12, scale: 2 }).default("0").notNull(),
+  hourlyRate: numeric("hourly_rate", { precision: 12, scale: 2 }).default("0").notNull(),
+  tripRate: numeric("trip_rate", { precision: 12, scale: 2 }).default("0").notNull(),
+  tripCharge: numeric("trip_charge", { precision: 14, scale: 2 }).default("0").notNull(),
+  flatRateAmount: numeric("flat_rate_amount", { precision: 14, scale: 2 }).default("0").notNull(),
+  discountPercent: numeric("discount_percent", { precision: 7, scale: 3 }).default("0").notNull(),
+  surchargePercent: numeric("surcharge_percent", { precision: 7, scale: 3 }).default("0").notNull(),
+  salesTaxPercent: numeric("sales_tax_percent", { precision: 7, scale: 4 }).default("0").notNull(),
+  salesTax: numeric("sales_tax", { precision: 14, scale: 2 }).default("0").notNull(),
+  taxExempt: boolean("tax_exempt").default(false).notNull(),
+  overrideTripCharge: boolean("override_trip_charge").default(false).notNull(),
+  overtime: boolean("overtime").default(false).notNull(),
+  quoteDetails: jsonb("quote_details").$type<Record<string, unknown>>().default({}).notNull(),
+  calculationSnapshot: jsonb("calculation_snapshot").$type<Record<string, unknown>>().default({}).notNull(),
   estimatedTotal: numeric("estimated_total", { precision: 14, scale: 2 }).default("0").notNull(),
+  total: numeric("total", { precision: 14, scale: 2 }).default("0").notNull(),
+  notes: text("notes"),
   legacyId: text("legacy_id"),
   ...timestamps,
 }, (table) => [uniqueIndex("quote_organization_number_uidx").on(table.organizationId, table.quoteNumber), uniqueIndex("quote_organization_legacy_uidx").on(table.organizationId, table.legacyId)]);
+
+export const leadIntakeToken = pgTable("lead_intake_token", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  createdByUserId: text("created_by_user_id").references(() => user.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  tokenHash: text("token_hash").notNull(),
+  active: boolean("active").default(true).notNull(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [uniqueIndex("lead_intake_token_hash_uidx").on(table.tokenHash), index("lead_intake_token_organization_idx").on(table.organizationId)]);
 
 export const job = pgTable("job", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -129,8 +171,19 @@ export const job = pgTable("job", {
   quoteId: text("quote_id").references(() => quote.id, { onDelete: "set null" }),
   jobNumber: text("job_number").notNull(),
   status: jobStatus("status").default("scheduled").notNull(),
+  jobType: text("job_type").default("move").notNull(),
   scheduledStart: timestamp("scheduled_start", { withTimezone: true }),
   scheduledEnd: timestamp("scheduled_end", { withTimezone: true }),
+  actualStart: timestamp("actual_start", { withTimezone: true }),
+  actualEnd: timestamp("actual_end", { withTimezone: true }),
+  originAddress: text("origin_address"),
+  destinationAddress: text("destination_address"),
+  crewCount: integer("crew_count").default(0).notNull(),
+  truckCount: integer("truck_count").default(0).notNull(),
+  dispatchNotes: text("dispatch_notes"),
+  contractStatus: text("contract_status").default("pending").notNull(),
+  paymentStatus: text("payment_status").default("unpaid").notNull(),
+  estimatedTotal: numeric("estimated_total", { precision: 14, scale: 2 }).default("0").notNull(),
   legacyId: text("legacy_id"),
   ...timestamps,
 }, (table) => [uniqueIndex("job_organization_number_uidx").on(table.organizationId, table.jobNumber), uniqueIndex("job_organization_legacy_uidx").on(table.organizationId, table.legacyId)]);
@@ -167,5 +220,5 @@ export const leadSourceRelations = relations(leadSource, ({ one, many }) => ({ o
 export const leadRelations = relations(lead, ({ one, many }) => ({ organization: one(organization, { fields: [lead.organizationId], references: [organization.id] }), source: one(leadSource, { fields: [lead.leadSourceId], references: [leadSource.id] }), assignedUser: one(user, { fields: [lead.assignedUserId], references: [user.id] }), customers: many(customer), quotes: many(quote) }));
 export const customerRelations = relations(customer, ({ one, many }) => ({ organization: one(organization, { fields: [customer.organizationId], references: [organization.id] }), lead: one(lead, { fields: [customer.leadId], references: [lead.id] }), quotes: many(quote), jobs: many(job) }));
 export const quoteRelations = relations(quote, ({ one, many }) => ({ organization: one(organization, { fields: [quote.organizationId], references: [organization.id] }), customer: one(customer, { fields: [quote.customerId], references: [customer.id] }), lead: one(lead, { fields: [quote.leadId], references: [lead.id] }), jobs: many(job) }));
+export const leadIntakeTokenRelations = relations(leadIntakeToken, ({ one }) => ({ organization: one(organization, { fields: [leadIntakeToken.organizationId], references: [organization.id] }), createdBy: one(user, { fields: [leadIntakeToken.createdByUserId], references: [user.id] }) }));
 export const jobRelations = relations(job, ({ one }) => ({ organization: one(organization, { fields: [job.organizationId], references: [organization.id] }), office: one(office, { fields: [job.officeId], references: [office.id] }), customer: one(customer, { fields: [job.customerId], references: [customer.id] }), quote: one(quote, { fields: [job.quoteId], references: [quote.id] }) }));
-

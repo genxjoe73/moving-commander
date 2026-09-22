@@ -22,6 +22,7 @@ Replacement decisions:
 - Intake creates a normalized `lead` first instead of an oversized quote record.
 - `source_message_id` has a tenant-scoped unique constraint for idempotency.
 - Manual entry and lead conversion are implemented first; automated ingestion will use provider webhooks or secure email forwarding, with polling as a compatibility adapter.
+- Automated intake is now available at `/api/intake/leads` using tenant-specific hashed bearer tokens. It accepts normalized JSON fields or the legacy `label: value` body format and deduplicates on `source_message_id`.
 - Mail credentials will live in an encrypted secret provider, never in application tables or source control.
 - Source mappings remain tenant-configurable through `lead_source.field_mapping`.
 - Conversion creates a linked customer and draft quote in one transaction and records an audit event.
@@ -34,6 +35,10 @@ The legacy quote flow searches for customers using overlapping email/name/phone 
 - Lead/customer/quote creation is tenant-scoped and transactional.
 - A lead can be converted once to a customer; later quote creation should reuse that customer.
 - Exact duplicate-detection rules must be validated against production data before automated merging is enabled.
+
+## Quote and job conversion
+
+The new quote editor carries forward the legacy contact, move, labor, trip, flat-rate, tax, liability, and notes concepts while storing a calculation snapshot. It applies Item 22 quarter-hour rounding, the captured Texas local maximum rates, Section 3 distance/weight tables, Item 225 warehouse rates, overtime multiplication, and the 30% surcharge cap. The quote can be handed off into a scheduled job with crew, truck, address, and operational status fields.
 
 ## Tenant model
 

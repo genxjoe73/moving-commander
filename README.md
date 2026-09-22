@@ -9,7 +9,10 @@ Modern multi-tenant replacement for the legacy Moving Commander ASP.NET MVC appl
 - Company onboarding, memberships, roles, offices, and platform administration
 - Tenant-scoped PostgreSQL records with audit logs and legacy import identifiers
 - Lead intake, pipeline stages, and conversion to customer plus draft quote
-- Customer and quote registers
+- Automated lead intake endpoint with tenant-specific bearer tokens
+- Customer and quote registers with a full quote editor
+- Tariff-aware local hourly, long-haul, warehouse, and flat-rate calculations
+- Scheduled jobs with crew, truck, address, and status controls
 - Railway build, migration, health-check, and deployment configuration
 
 Jobs currently has a connected module shell. Scheduling, contracts, payments, storage, payroll, and accounting are staged for later conversion.
@@ -48,6 +51,19 @@ npm run db:migrate
 ```
 
 Production deploys run `npm run db:migrate` before starting the Next.js server. Never place customer data or production credentials in the repository.
+
+## Automated lead intake
+
+Company owners and admins can create a one-time bearer token in Company Setup. Send a JSON `POST` to `/api/intake/leads`:
+
+```bash
+curl -X POST https://moving-commander-production.up.railway.app/api/intake/leads \
+  -H 'Authorization: Bearer mc_live_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"sourceMessageId":"provider-123","fields":{"firstName":"Taylor","lastName":"Mover","email":"taylor@example.com","phone":"555-0100","moveDate":"2026-10-15","originPostalCode":"76010","destinationPostalCode":"76102"}}'
+```
+
+The endpoint is idempotent by tenant and `sourceMessageId`. It accepts normalized fields or the legacy `label: value` email-body format through `rawText`, then places the record in the same lead pipeline as manual intake.
 
 ## Conversion sequence
 
