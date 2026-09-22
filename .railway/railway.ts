@@ -18,6 +18,7 @@ export default defineRailway(() => {
       BETTER_AUTH_URL: preserve(),
       DATABASE_URL: preserve(),
       NEXT_PUBLIC_APP_URL: preserve(),
+      PLATFORM_ADMIN_EMAILS: preserve(),
     },
   });
   return project("moving-commander", {
