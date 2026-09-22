@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { auditLog, crew, job, jobContract, jobCrewAssignment, jobPayment, storageItem, storageRecord } from "@/db/app-schema";
+import { auditLog, crew, employee, job, jobContract, jobCrewAssignment, jobEmployeeAssignment, jobPayment, jobTruckAssignment, storageItem, storageRecord, truck } from "@/db/app-schema";
 import { requireTenantRole } from "@/lib/tenant";
 
 const id = z.string().uuid();
@@ -32,6 +32,52 @@ export async function assignCrew(formData: FormData) {
     await tx.insert(jobCrewAssignment).values({ organizationId: tenant.organization.id, jobId: currentJobId, crewId, role }).onConflictDoNothing();
     await tx.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.crew_assigned", entityType: "job", entityId: currentJobId, metadata: { crewId, role } });
   });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+}
+
+export async function createEmployee(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin"]);
+  const firstName = text(80).min(1).parse(formData.get("firstName"));
+  const lastName = text(80).min(1).parse(formData.get("lastName"));
+  const email = text(200).parse(formData.get("email") || "") || null;
+  const phone = text(60).parse(formData.get("phone") || "") || null;
+  const role = text(60).parse(formData.get("role") || "mover");
+  await db.insert(employee).values({ organizationId: tenant.organization.id, firstName, lastName, email, phone, role });
+  revalidatePath("/app/jobs");
+  revalidatePath("/app/settings");
+}
+
+export async function createTruck(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin"]);
+  const unitNumber = text(40).min(1).parse(formData.get("unitNumber"));
+  const truckType = text(80).parse(formData.get("truckType") || "moving truck");
+  const capacity = text(80).parse(formData.get("capacity") || "") || null;
+  await db.insert(truck).values({ organizationId: tenant.organization.id, unitNumber, truckType, capacity });
+  revalidatePath("/app/jobs");
+  revalidatePath("/app/settings");
+}
+
+export async function assignEmployee(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const employeeId = id.parse(formData.get("employeeId"));
+  const role = text(60).parse(formData.get("role") || "mover");
+  const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, currentJobId), eq(job.organizationId, tenant.organization.id))).limit(1);
+  const [ownedEmployee] = await db.select({ id: employee.id }).from(employee).where(and(eq(employee.id, employeeId), eq(employee.organizationId, tenant.organization.id), eq(employee.active, true))).limit(1);
+  if (!ownedJob || !ownedEmployee) throw new Error("Job or employee not found in this company.");
+  await db.insert(jobEmployeeAssignment).values({ organizationId: tenant.organization.id, jobId: currentJobId, employeeId, role }).onConflictDoNothing();
+  revalidatePath(`/app/jobs/${currentJobId}`);
+}
+
+export async function assignTruck(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const truckId = id.parse(formData.get("truckId"));
+  const role = text(60).parse(formData.get("role") || "primary");
+  const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, currentJobId), eq(job.organizationId, tenant.organization.id))).limit(1);
+  const [ownedTruck] = await db.select({ id: truck.id }).from(truck).where(and(eq(truck.id, truckId), eq(truck.organizationId, tenant.organization.id), eq(truck.active, true))).limit(1);
+  if (!ownedJob || !ownedTruck) throw new Error("Job or truck not found in this company.");
+  await db.insert(jobTruckAssignment).values({ organizationId: tenant.organization.id, jobId: currentJobId, truckId, role }).onConflictDoNothing();
   revalidatePath(`/app/jobs/${currentJobId}`);
 }
 

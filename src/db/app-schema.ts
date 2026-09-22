@@ -208,6 +208,50 @@ export const jobCrewAssignment = pgTable("job_crew_assignment", {
   ...timestamps,
 }, (table) => [index("job_crew_assignment_organization_idx").on(table.organizationId), uniqueIndex("job_crew_assignment_job_crew_uidx").on(table.jobId, table.crewId)]);
 
+export const employee = pgTable("employee", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  role: text("role").default("mover").notNull(),
+  active: boolean("active").default(true).notNull(),
+  legacyId: text("legacy_id"),
+  ...timestamps,
+}, (table) => [index("employee_organization_idx").on(table.organizationId), uniqueIndex("employee_organization_legacy_uidx").on(table.organizationId, table.legacyId)]);
+
+export const truck = pgTable("truck", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  unitNumber: text("unit_number").notNull(),
+  truckType: text("truck_type").default("moving truck").notNull(),
+  capacity: text("capacity"),
+  active: boolean("active").default(true).notNull(),
+  legacyId: text("legacy_id"),
+  ...timestamps,
+}, (table) => [index("truck_organization_idx").on(table.organizationId), uniqueIndex("truck_organization_unit_uidx").on(table.organizationId, table.unitNumber), uniqueIndex("truck_organization_legacy_uidx").on(table.organizationId, table.legacyId)]);
+
+export const jobEmployeeAssignment = pgTable("job_employee_assignment", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  jobId: text("job_id").notNull().references(() => job.id, { onDelete: "cascade" }),
+  employeeId: text("employee_id").notNull().references(() => employee.id, { onDelete: "cascade" }),
+  role: text("role").default("mover").notNull(),
+  assignedAt: timestamp("assigned_at", { withTimezone: true }).defaultNow().notNull(),
+  ...timestamps,
+}, (table) => [index("job_employee_assignment_organization_idx").on(table.organizationId), uniqueIndex("job_employee_assignment_job_employee_uidx").on(table.jobId, table.employeeId)]);
+
+export const jobTruckAssignment = pgTable("job_truck_assignment", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  jobId: text("job_id").notNull().references(() => job.id, { onDelete: "cascade" }),
+  truckId: text("truck_id").notNull().references(() => truck.id, { onDelete: "cascade" }),
+  role: text("role").default("primary").notNull(),
+  assignedAt: timestamp("assigned_at", { withTimezone: true }).defaultNow().notNull(),
+  ...timestamps,
+}, (table) => [index("job_truck_assignment_organization_idx").on(table.organizationId), uniqueIndex("job_truck_assignment_job_truck_uidx").on(table.jobId, table.truckId)]);
+
 export const jobContract = pgTable("job_contract", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
@@ -290,7 +334,11 @@ export const customerRelations = relations(customer, ({ one, many }) => ({ organ
 export const quoteRelations = relations(quote, ({ one, many }) => ({ organization: one(organization, { fields: [quote.organizationId], references: [organization.id] }), customer: one(customer, { fields: [quote.customerId], references: [customer.id] }), lead: one(lead, { fields: [quote.leadId], references: [lead.id] }), jobs: many(job) }));
 export const leadIntakeTokenRelations = relations(leadIntakeToken, ({ one }) => ({ organization: one(organization, { fields: [leadIntakeToken.organizationId], references: [organization.id] }), createdBy: one(user, { fields: [leadIntakeToken.createdByUserId], references: [user.id] }) }));
 export const crewRelations = relations(crew, ({ one, many }) => ({ organization: one(organization, { fields: [crew.organizationId], references: [organization.id] }), assignments: many(jobCrewAssignment) }));
+export const employeeRelations = relations(employee, ({ one, many }) => ({ organization: one(organization, { fields: [employee.organizationId], references: [organization.id] }), assignments: many(jobEmployeeAssignment) }));
+export const truckRelations = relations(truck, ({ one, many }) => ({ organization: one(organization, { fields: [truck.organizationId], references: [organization.id] }), assignments: many(jobTruckAssignment) }));
 export const jobCrewAssignmentRelations = relations(jobCrewAssignment, ({ one }) => ({ organization: one(organization, { fields: [jobCrewAssignment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobCrewAssignment.jobId], references: [job.id] }), crew: one(crew, { fields: [jobCrewAssignment.crewId], references: [crew.id] }) }));
+export const jobEmployeeAssignmentRelations = relations(jobEmployeeAssignment, ({ one }) => ({ organization: one(organization, { fields: [jobEmployeeAssignment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobEmployeeAssignment.jobId], references: [job.id] }), employee: one(employee, { fields: [jobEmployeeAssignment.employeeId], references: [employee.id] }) }));
+export const jobTruckAssignmentRelations = relations(jobTruckAssignment, ({ one }) => ({ organization: one(organization, { fields: [jobTruckAssignment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobTruckAssignment.jobId], references: [job.id] }), truck: one(truck, { fields: [jobTruckAssignment.truckId], references: [truck.id] }) }));
 export const jobContractRelations = relations(jobContract, ({ one }) => ({ organization: one(organization, { fields: [jobContract.organizationId], references: [organization.id] }), job: one(job, { fields: [jobContract.jobId], references: [job.id] }) }));
 export const jobPaymentRelations = relations(jobPayment, ({ one }) => ({ organization: one(organization, { fields: [jobPayment.organizationId], references: [organization.id] }), job: one(job, { fields: [jobPayment.jobId], references: [job.id] }) }));
 export const storageRecordRelations = relations(storageRecord, ({ one, many }) => ({ organization: one(organization, { fields: [storageRecord.organizationId], references: [organization.id] }), job: one(job, { fields: [storageRecord.jobId], references: [job.id] }), customer: one(customer, { fields: [storageRecord.customerId], references: [customer.id] }), items: many(storageItem) }));
