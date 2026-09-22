@@ -192,6 +192,19 @@ export async function createStorageRecord(formData: FormData) {
   revalidatePath(`/app/jobs/${currentJobId}`);
 }
 
+export async function closeStorageRecord(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const storageRecordId = id.parse(formData.get("storageRecordId"));
+  const [ownedRecord] = await db.select({ id: storageRecord.id, status: storageRecord.status }).from(storageRecord).where(and(eq(storageRecord.id, storageRecordId), eq(storageRecord.organizationId, tenant.organization.id), eq(storageRecord.jobId, currentJobId))).limit(1);
+  if (!ownedRecord) throw new Error("Storage record not found in this company.");
+  if (ownedRecord.status === "exited") return;
+  await db.update(storageRecord).set({ status: "exited", exitDate: new Date(), updatedAt: new Date() }).where(and(eq(storageRecord.id, storageRecordId), eq(storageRecord.organizationId, tenant.organization.id)));
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "storage_record.closed", entityType: "storage_record", entityId: storageRecordId, metadata: { jobId: currentJobId } });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+  revalidatePath(`/app/jobs/${currentJobId}/storage`);
+}
+
 export async function addStorageItem(formData: FormData) {
   const tenant = await requireTenantRole(["owner", "admin", "member"]);
   const currentJobId = jobId(formData);
