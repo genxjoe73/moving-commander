@@ -13,7 +13,7 @@ import { getUserOrganizations, requireUser } from "@/lib/tenant";
 
 const tenantSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
-  slug: z.string().trim().toLowerCase().transform((value) => value.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "")).pipe(z.string().min(2).max(80).regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$/)),
+  slug: z.string().trim().toLowerCase().transform((value) => value.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "").replace(/\.$/, "")).pipe(z.string().min(2).max(80).regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$/, { message: "Enter a supported domain address, such as www.joesmoving.com." })),
   phone: z.string().trim().max(30).optional(),
   city: z.string().trim().max(80).optional(),
   state: z.string().trim().max(40).optional(),
