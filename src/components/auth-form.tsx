@@ -28,7 +28,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       return;
     }
 
-    router.push(mode === "signup" ? "/onboarding" : "/app");
+    router.push("/app");
     router.refresh();
   }
 
@@ -43,4 +43,3 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     </form>
   );
 }
-

@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { member, organization } from "@/db/auth-schema";
 import { organizationProfile } from "@/db/app-schema";
 import { auth } from "@/lib/auth";
+import { hasPlatformAdminAccess } from "@/lib/platform-access";
 
 export async function getSession() {
   return auth.api.getSession({ headers: await headers() });
@@ -35,7 +36,10 @@ export async function getUserOrganizations(userId: string) {
 export async function requireTenant() {
   const session = await requireUser();
   const memberships = await getUserOrganizations(session.user.id);
-  if (memberships.length === 0) redirect("/onboarding");
+  if (memberships.length === 0) {
+    if (hasPlatformAdminAccess(session.user)) redirect("/platform");
+    redirect("/onboarding");
+  }
 
   const activeOrganizationId = session.session.activeOrganizationId;
   const active = memberships.find((item) => item.id === activeOrganizationId) ?? memberships[0];
@@ -70,4 +74,3 @@ export async function isOrganizationMember(userId: string, organizationId: strin
     .limit(1);
   return Boolean(membership);
 }
-
