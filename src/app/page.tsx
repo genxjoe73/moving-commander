@@ -1,196 +1,93 @@
 import Image from "next/image";
 
+const slides = [
+  ["/site-assets/customer-mover-mc-2019.jpg", "Customer and mover"],
+  ["/site-assets/customermovermc-2.jpg", "Moving Commander customer service"],
+  ["/site-assets/moversmc.jpg", "Professional movers"],
+  ["/site-assets/truckmovingcommander-2.jpg", "Moving truck"],
+  ["/site-assets/contract-signing.jpg", "Digital contract signing"],
+];
+
+const features = [
+  ["Easy Job Entry, Job Scheduling & Dispatch", "Like No Other"],
+  ["Electronic Document Control for Customer, Driver & Home Office", "Desktop or Mobile Management"],
+  ["Slashed Payroll Time with Built-In Paycheck Generation", "Gives Your Time Back To You — all a by-product of job scheduling and dispatch"],
+  ["Built-In, Full Featured Accounting", "Customized for Your Moving Business. Job activity resides in a full-featured accounting system built-in to Moving Commander. No uploading data, no third-party interfacing or posting."],
+  ["Compliant Paperless Contract and Payment", "USDOT and State Compliant Forms, On-site Contract Review, Approval, and Payment"],
+  ["Personalized for Your Business", "Cherry-Pick Your Features"],
+  ["Subscriber-Based System, Multi-User Access", "Run your entire moving business for a low monthly rate."],
+  ["Easy to Learn & Super Efficient", "All key job information is available from a single page."],
+  ["Agent Lead Management", "Mobile or Desktop Access"],
+];
+
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1">
-      <BrandBar />
-      <NavStrip />
-      <HeroImage />
-      <Headline />
-      <Features />
-      <CallToAction />
-      <Footer />
-    </div>
-  );
-}
-
-function BrandBar() {
-  return (
-    <header className="bg-olive text-white">
-      <div className="mx-auto max-w-6xl px-6 py-8 text-center">
-        <div className="flex justify-center">
-          <Image
-            src="/logo-on-dark.svg"
-            alt="Moving Commander — The Complete Moving Company Management Solution"
-            width={506}
-            height={80}
-            priority
-            className="w-full max-w-xl h-auto"
-          />
-        </div>
-        <p className="font-display text-2xl md:text-4xl mt-8">
-          Call For A FREE Demo:
-          <br />
-          <a
-            href="tel:+14699230350"
-            className="underline decoration-2 underline-offset-4 hover:text-khaki transition-colors"
-          >
-            469-923-0350
+    <main id="top">
+      <header className="site-header">
+        <div className="header-brand">
+          <a href="#top" aria-label="Moving Commander home">
+            <Image src="/site-assets/logo-on-dark.svg" alt="Moving Commander, the complete moving company management solution" width={506} height={80} priority />
           </a>
-        </p>
-      </div>
-    </header>
-  );
-}
-
-function NavStrip() {
-  return (
-    <nav className="bg-khaki">
-      <div className="mx-auto max-w-6xl px-6 py-4 flex justify-around items-center font-heading uppercase text-ink tracking-[0.3em] text-sm md:text-base">
-        <a href="#top" className="hover:text-olive transition-colors">
-          Home
-        </a>
-        <a href="#features" className="hover:text-olive transition-colors">
-          About
-        </a>
-        <a href="#contact" className="hover:text-olive transition-colors">
-          Contact
-        </a>
-      </div>
-    </nav>
-  );
-}
-
-function HeroImage() {
-  return (
-    <section
-      className="relative h-64 md:h-96 bg-olive-dark overflow-hidden"
-      aria-label="Hero"
-    >
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(135deg, rgba(245,197,24,0.08) 0 2px, transparent 2px 24px)",
-        }}
-      />
-      <div className="relative h-full flex items-center justify-center text-center px-6">
-        <div>
-          <p className="font-heading uppercase tracking-[0.4em] text-khaki text-xs md:text-sm mb-3">
-            Trusted by movers
-          </p>
-          <p className="font-display text-white text-2xl md:text-4xl">
-            From the first quote to the final invoice.
-          </p>
         </div>
-      </div>
-    </section>
-  );
-}
+        <div className="phone-top">
+          <p>Call For A FREE Demo:</p>
+          <a href="tel:+14699230350">469-923-0350</a>
+        </div>
+        <nav aria-label="Primary navigation">
+          <a href="#top">HOME</a>
+          <a href="#about">ABOUT</a>
+          <a href="#contact">CONTACT</a>
+        </nav>
+      </header>
 
-function Headline() {
-  return (
-    <section className="bg-sand py-16 md:py-24">
-      <div className="mx-auto max-w-4xl px-6 text-center">
-        <h1 className="font-display text-3xl md:text-5xl text-ink leading-tight">
-          The Compliant, Time-saving, Total Moving Management Solution for
-          Movers
-        </h1>
-      </div>
-    </section>
-  );
-}
-
-function Features() {
-  const features = [
-    {
-      title: "Lead Management & Email Marketing",
-      body: "Capture leads, nurture them, convert them — without paying a SaaS for every step.",
-    },
-    {
-      title: "On-site Customer Contract & Payment",
-      body: "Sign and bill on the truck. Cards, ACH, signed in the driveway.",
-    },
-    {
-      title: "Compliant Documents & Mobile Job Sheets",
-      body: "BOLs, inventories, and tariffs — always current, always on the tablet.",
-    },
-    {
-      title: "Dispatch, GPS & Crew Management",
-      body: "Know where every truck is, who's on it, and how the day is running.",
-    },
-    {
-      title: "Quoting & Storage / SIT",
-      body: "Local hourly, long-haul by weight, storage by the day — all in one system.",
-    },
-    {
-      title: "Reporting, Payroll & Accounting",
-      body: "Real numbers on the business — month-end isn't a guessing game.",
-    },
-  ];
-
-  return (
-    <section id="features" className="bg-white py-16 md:py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <p className="font-heading uppercase tracking-[0.3em] text-olive text-sm mb-3 text-center">
-          What It Does
-        </p>
-        <h2 className="font-display text-2xl md:text-4xl text-ink mb-12 text-center">
-          BUILT FOR THE WHOLE OPERATION
-        </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="border-2 border-olive/10 bg-sand/40 p-6 hover:border-khaki hover:bg-sand transition-colors"
-            >
-              <h3 className="font-heading uppercase text-lg text-olive mb-3 tracking-wide">
-                {f.title}
-              </h3>
-              <p className="text-ink/80 text-sm leading-relaxed">{f.body}</p>
-            </div>
+      <section className="hero" aria-label="Moving Commander introduction">
+        <div className="hero-header">
+          <p>Introducing...</p>
+          <h1>The Only Total Moving Management Solution<br />That is State DMV Compliant</h1>
+        </div>
+        <div className="hero-slideshow">
+          {slides.map(([src, alt], index) => (
+            <Image key={src} src={src} alt={alt} fill priority={index === 0} sizes="100vw" className={`hero-slide hero-slide-${index}`} />
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-function CallToAction() {
-  return (
-    <section className="bg-olive text-white py-16">
-      <div className="mx-auto max-w-4xl px-6 text-center">
-        <p className="font-heading uppercase tracking-[0.3em] text-khaki text-sm mb-3">
-          Coming Soon
-        </p>
-        <h2 className="font-display text-2xl md:text-4xl mb-6">
-          THE QUICK QUOTE PAGE
-        </h2>
-        <p className="text-base md:text-lg text-sand mb-8 max-w-2xl mx-auto">
-          A public, no-login quote tool. Enter origin, destination, weight —
-          get a real number based on your rate sheet.
-        </p>
-        <span className="inline-block border-2 border-khaki text-khaki font-heading uppercase tracking-wider px-8 py-4">
-          In Development
-        </span>
-      </div>
-    </section>
-  );
-}
+      <section className="gallery" id="features">
+        <h2>The Compliant, Time-saving, Total Moving Management Solution<br />for Movers</h2>
+        <Image className="feature-diagram" src="/site-assets/feature-diagram-new.png" alt="Moving Commander feature diagram" width={800} height={665} />
+        <div className="feature-grid">
+          {features.map(([title, subtitle]) => (
+            <article className="feature-card" key={title}>
+              <h3>{title}</h3>
+              <p>{subtitle}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
-function Footer() {
-  return (
-    <footer
-      id="contact"
-      className="bg-olive-dark text-sand/70 py-6 text-sm font-heading uppercase tracking-wider"
-    >
-      <div className="mx-auto max-w-6xl px-6 flex flex-col md:flex-row justify-between items-center gap-3">
-        <span>Moving Commander</span>
-        <a href="tel:+14699230350" className="hover:text-khaki">
-          469-923-0350
-        </a>
-        <span className="text-sand/40">Sample site — Railway preview</span>
-      </div>
-    </footer>
+      <div className="red-rule" />
+
+      <section className="about" id="about">
+        <h2>ABOUT OUR COMPANY</h2>
+        <p>We believe a strong logical and practical approach can produce a winning formula for the moving industry. Moving Commander lowers cost of ownership to drive new business by helping you work smarter not harder.</p>
+        <p>Two years of research and hands-on experience working with other so-called &quot;solutions&quot; for the management of a moving business shows proper processes and simple organization in the moving business was woefully lacking. We identified the key aspects of the moving business in accordance to State mandated rules and regulations, that led us to a better way — a solution to revolutionize the moving industry.</p>
+        <p>Moving Commander addresses mission-critical pitfalls and mitigating risk in the moving business such as dispatching jobs, managing personnel, payment management, payroll, workflow, scheduling and more. It enhances the customer experience using the social media platform to increase marketing opportunities and brand awareness.</p>
+        <p>Moving Commander is a 21st century, all-digital paperless system platform for the entire moving industry. The new platform eliminates piles of paperwork, is compliant with state law, and handles money transactions via a simple-to-use handheld digital tablet.</p>
+        <p>The mobility factor of the tablet coupled with the correct software solution makes for huge time savings and seamless lead-to-payment processing. The results can produce exponential sales increases and profits by a factor of five in the first year.</p>
+        <p>Moving Commander pays for itself in no time. Gone is the paper. Now digitally safe and secure processes produce the accuracy and speed a mover needs to compete and excel.</p>
+      </section>
+
+      <footer className="site-footer" id="contact">
+        <Image src="/site-assets/logo-header-footer-2019.png" alt="Moving Commander" width={450} height={74} />
+        <p className="footer-hero">Request a FREE Demo</p>
+        <p className="footer-hero">Call: <a href="tel:+14699230350">469-923-0350</a></p>
+        <a className="contact-link" href="mailto:info@movingcommander.com">Contact Us</a>
+        <a href="https://www.mytexasmover.com/SMA/For_Consumers/Find_A_Mover.aspx?ScrollNum=0&Search=Moving%20Commander&Filter="><Image className="association-logo" src="/site-assets/southwest-movers-association.png" alt="Southwest Movers Association" width={200} height={94} /></a>
+        <p>Don&apos;t Make A Move Without Us.<br />Find A Licensed Mover in Texas.</p>
+        <a href="https://www.txdmv.gov/motorists/consumer-protection/dont-make-a-move"><Image src="/site-assets/stop-sign-100x100.png" alt="Texas Department of Motor Vehicles" width={100} height={100} /></a>
+        <p>Texas Department of Motor Vehicles</p>
+        <div className="copyright">©2020 - <strong>Moving Commander LLC</strong></div>
+      </footer>
+    </main>
   );
 }
