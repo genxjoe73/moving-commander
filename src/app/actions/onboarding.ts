@@ -13,7 +13,7 @@ import { getUserOrganizations, requireUser } from "@/lib/tenant";
 
 const tenantSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
-  slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(2).max(50),
+  slug: z.string().trim().toLowerCase().transform((value) => value.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "")).pipe(z.string().min(2).max(80).regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$/)),
   phone: z.string().trim().max(30).optional(),
   city: z.string().trim().max(80).optional(),
   state: z.string().trim().max(40).optional(),
@@ -87,4 +87,3 @@ export async function completeOnboarding() {
   await db.update(organizationProfile).set({ onboardingStep: 5, onboardingCompletedAt: new Date() }).where(eq(organizationProfile.organizationId, organization.id));
   redirect("/app/settings");
 }
-
