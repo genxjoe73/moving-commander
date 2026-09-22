@@ -37,6 +37,7 @@ export default function Home() {
           <a href="#top">HOME</a>
           <a href="#about">ABOUT</a>
           <a href="#contact">CONTACT</a>
+          <a href="/login">CUSTOMER LOGIN</a>
         </nav>
       </header>
 
@@ -82,6 +83,7 @@ export default function Home() {
         <p className="footer-hero">Request a FREE Demo</p>
         <p className="footer-hero">Call: <a href="tel:+14699230350">469-923-0350</a></p>
         <a className="contact-link" href="https://movingcommander.com/contact-us.html">Contact Us</a>
+        <a className="subscriber-link" href="/login">Subscriber Login</a>
         <a href="https://www.mytexasmover.com/SMA/For_Consumers/Find_A_Mover.aspx?ScrollNum=0&Search=Moving%20Commander&Filter="><Image className="association-logo" src="/site-assets/southwest-movers-association.png" alt="Southwest Movers Association" width={200} height={94} /></a>
         <p>Don&apos;t Make A Move Without Us.<br />Find A Licensed Mover in Texas.</p>
         <a href="https://www.txdmv.gov/motorists/consumer-protection/dont-make-a-move"><Image src="/site-assets/stop-sign-100x100.png" alt="Texas Department of Motor Vehicles" width={100} height={100} /></a>
