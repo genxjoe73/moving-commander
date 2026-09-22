@@ -22,6 +22,28 @@ const jobSchema = z.object({
   dispatchNotes: z.string().trim().max(4000),
 });
 const statusSchema = z.enum(["scheduled", "dispatched", "in_progress", "completed", "cancelled"]);
+const dateInput = z.string().trim().refine((value) => !value || !Number.isNaN(Date.parse(value)), "Enter a valid date and time.");
+
+const jobUpdateSchema = z.object({
+  id: z.string().uuid(),
+  status: statusSchema,
+  scheduledStart: dateInput,
+  scheduledEnd: dateInput,
+  actualStart: dateInput,
+  actualEnd: dateInput,
+  crewCount: z.coerce.number().int().min(0).max(100),
+  truckCount: z.coerce.number().int().min(0).max(100),
+  originAddress: z.string().trim().max(500),
+  destinationAddress: z.string().trim().max(500),
+  dispatchNotes: z.string().trim().max(4000),
+}).superRefine((data, ctx) => {
+  if (data.scheduledStart && data.scheduledEnd && new Date(data.scheduledEnd) < new Date(data.scheduledStart)) {
+    ctx.addIssue({ code: "custom", path: ["scheduledEnd"], message: "The scheduled end must be after the scheduled start." });
+  }
+  if (data.actualStart && data.actualEnd && new Date(data.actualEnd) < new Date(data.actualStart)) {
+    ctx.addIssue({ code: "custom", path: ["actualEnd"], message: "The actual end must be after the actual start." });
+  }
+});
 
 export async function createJob(formData: FormData) {
   const tenant = await requireTenantRole(["owner", "admin", "member"]);
@@ -55,4 +77,36 @@ export async function updateJobStatus(formData: FormData) {
   await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.status_changed", entityType: "job", entityId: id, metadata: { status } });
   revalidatePath("/app");
   revalidatePath("/app/jobs");
+}
+
+export async function updateJob(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const parsed = jobUpdateSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Check the job details.");
+  const data = parsed.data;
+  const [updated] = await db.update(job).set({
+    status: data.status,
+    scheduledStart: data.scheduledStart ? new Date(data.scheduledStart) : null,
+    scheduledEnd: data.scheduledEnd ? new Date(data.scheduledEnd) : null,
+    actualStart: data.actualStart ? new Date(data.actualStart) : null,
+    actualEnd: data.actualEnd ? new Date(data.actualEnd) : null,
+    crewCount: data.crewCount,
+    truckCount: data.truckCount,
+    originAddress: data.originAddress || null,
+    destinationAddress: data.destinationAddress || null,
+    dispatchNotes: data.dispatchNotes || null,
+    updatedAt: new Date(),
+  }).where(and(eq(job.id, data.id), eq(job.organizationId, tenant.organization.id))).returning({ id: job.id });
+  if (!updated) return;
+  await db.insert(auditLog).values({
+    organizationId: tenant.organization.id,
+    userId: tenant.session.user.id,
+    action: "job.updated",
+    entityType: "job",
+    entityId: data.id,
+    metadata: { status: data.status, scheduledStart: data.scheduledStart || null, scheduledEnd: data.scheduledEnd || null },
+  });
+  revalidatePath("/app");
+  revalidatePath("/app/jobs");
+  revalidatePath(`/app/jobs/${data.id}`);
 }
