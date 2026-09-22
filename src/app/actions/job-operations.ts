@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { auditLog, crew, employee, employeeCompensation, employeeTimeLog, job, jobCharge, jobContract, jobCrewAssignment, jobDamage, jobEmployeeAssignment, jobNote, jobPayment, jobStop, jobTruckAssignment, storageItem, storageRecord, truck } from "@/db/app-schema";
+import { auditLog, crew, employee, employeeCompensation, employeeTimeLog, job, jobCharge, jobContract, jobCrewAssignment, jobDamage, jobEmployeeAssignment, jobInvoice, jobNote, jobPayment, jobStop, jobTruckAssignment, storageItem, storageRecord, truck } from "@/db/app-schema";
 import { requireTenantRole } from "@/lib/tenant";
 import { rangesOverlap } from "@/lib/scheduling";
 
@@ -191,6 +191,24 @@ export async function addJobCharge(formData: FormData) {
   const [created] = await db.insert(jobCharge).values({ organizationId: tenant.organization.id, jobId: currentJobId, description, amount: amount.toFixed(2), status }).returning({ id: jobCharge.id });
   await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.charge_added", entityType: "job", entityId: currentJobId, metadata: { chargeId: created.id, amount, status } });
   revalidatePath(`/app/jobs/${currentJobId}`);
+}
+
+export async function saveJobInvoice(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin"]);
+  const currentJobId = jobId(formData);
+  const invoiceNumber = text(80).min(1).parse(formData.get("invoiceNumber"));
+  const status = z.enum(["draft", "sent", "partially_paid", "paid", "void"]).parse(formData.get("status"));
+  const subtotal = z.coerce.number().finite().min(0).max(100000000).parse(formData.get("subtotal"));
+  const tax = z.coerce.number().finite().min(0).max(100000000).parse(formData.get("tax"));
+  const total = z.coerce.number().finite().min(0).max(100000000).parse(formData.get("total"));
+  const dueDate = dateInput.parse(formData.get("dueDate") || "");
+  const notes = text(4000).parse(formData.get("notes") || "") || null;
+  const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, currentJobId), eq(job.organizationId, tenant.organization.id))).limit(1);
+  if (!ownedJob) throw new Error("Job not found in this company.");
+  await db.insert(jobInvoice).values({ organizationId: tenant.organization.id, jobId: currentJobId, invoiceNumber, status, subtotal: subtotal.toFixed(2), tax: tax.toFixed(2), total: total.toFixed(2), dueDate: dueDate ? new Date(dueDate) : null, notes }).onConflictDoUpdate({ target: jobInvoice.jobId, set: { invoiceNumber, status, subtotal: subtotal.toFixed(2), tax: tax.toFixed(2), total: total.toFixed(2), dueDate: dueDate ? new Date(dueDate) : null, notes, updatedAt: new Date() } });
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "job.invoice_updated", entityType: "job", entityId: currentJobId, metadata: { invoiceNumber, status, total } });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+  revalidatePath(`/app/jobs/${currentJobId}/billing`);
 }
 
 export async function saveJobContract(formData: FormData) {
