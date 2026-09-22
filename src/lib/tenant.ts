@@ -1,7 +1,7 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { db } from "@/db";
@@ -36,8 +36,24 @@ export async function getUserOrganizations(userId: string) {
 export async function requireTenant() {
   const session = await requireUser();
   const memberships = await getUserOrganizations(session.user.id);
+  const platformAdmin = hasPlatformAdminAccess(session.user);
+  const selectedPlatformTenantId = platformAdmin ? (await cookies()).get("mc_platform_tenant")?.value : undefined;
+  const [selectedPlatformTenant] = selectedPlatformTenantId
+    ? await db.select({ id: organization.id, name: organization.name, slug: organization.slug }).from(organization).where(eq(organization.id, selectedPlatformTenantId)).limit(1)
+    : [];
+
+  if (selectedPlatformTenant) {
+    const active = { ...selectedPlatformTenant, role: "admin" as const };
+    const [profile] = await db
+      .select()
+      .from(organizationProfile)
+      .where(eq(organizationProfile.organizationId, active.id))
+      .limit(1);
+    return { session, organization: active, profile: profile ?? null };
+  }
+
   if (memberships.length === 0) {
-    if (hasPlatformAdminAccess(session.user)) redirect("/platform");
+    if (platformAdmin) redirect("/platform");
     redirect("/onboarding");
   }
 
