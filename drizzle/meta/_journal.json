@@ -15,6 +15,13 @@
       "when": 1790046311221,
       "tag": "0001_steady_proteus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790046898400,
+      "tag": "0002_next_reptil",
+      "breakpoints": true
     }
   ]
 }

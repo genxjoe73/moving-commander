@@ -127,6 +127,7 @@ a { color: inherit; }
 .tenant-table th, .tenant-table td { padding: 12px; border-bottom: 1px solid #dfe4ec; text-align: left; }
 .tenant-table th { color: var(--muted); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
 .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(320px, .75fr); gap: 24px; align-items: start; }
+.operations-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
 .workspace-panel { min-width: 0; padding: 28px; background: white; box-shadow: 0 5px 18px rgba(16,29,58,.08); }
 .workspace-panel h2 { margin: 4px 0 8px; font-family: var(--font-heading), sans-serif; font-size: 1.6rem; }
 .panel-intro { margin: 0 0 22px; color: var(--muted); line-height: 1.5; }
@@ -180,6 +181,7 @@ a { color: inherit; }
   .app-shell { grid-template-columns: 230px minmax(0, 1fr); }
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .workspace-grid { grid-template-columns: 1fr; }
+  .operations-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
   .form-row, .settings-grid, .module-panel ul { grid-template-columns: 1fr; }

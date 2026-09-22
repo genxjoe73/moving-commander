@@ -40,6 +40,8 @@ The legacy quote flow searches for customers using overlapping email/name/phone 
 
 The new quote editor carries forward the legacy contact, move, labor, trip, flat-rate, tax, liability, and notes concepts while storing a calculation snapshot. It applies Item 22 quarter-hour rounding, the captured Texas local maximum rates, Section 3 distance/weight tables, Item 225 warehouse rates, overtime multiplication, and the 30% surcharge cap. The quote can be handed off into a scheduled job with crew, truck, address, and operational status fields.
 
+Jobs now have tenant-scoped operational records for dispatch crew assignments, contract status and document links, payment entries, storage records, and stored inventory items. These records are deliberately operational rather than accounting-ledger entries; reconciliation and payroll/accounting remain a later financial-risk phase.
+
 ## Tenant model
 
 The legacy application appears to assume one company per deployment/database (`SetUps.FirstOrDefault()` and a fixed connection string). `BusinessOffice` represents branches, not tenants. The replacement therefore introduces explicit organizations, memberships, tenant-owned records, and offices beneath each organization.

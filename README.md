@@ -13,6 +13,7 @@ Modern multi-tenant replacement for the legacy Moving Commander ASP.NET MVC appl
 - Customer and quote registers with a full quote editor
 - Tariff-aware local hourly, long-haul, warehouse, and flat-rate calculations
 - Scheduled jobs with crew, truck, address, and status controls
+- Dispatch crew assignments, contract tracking, payment records, storage records, and inventory items
 - Railway build, migration, health-check, and deployment configuration
 
 Jobs currently has a connected module shell. Scheduling, contracts, payments, storage, payroll, and accounting are staged for later conversion.
