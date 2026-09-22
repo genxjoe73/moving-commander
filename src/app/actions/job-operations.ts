@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { auditLog, crew, employee, job, jobCharge, jobContract, jobCrewAssignment, jobDamage, jobEmployeeAssignment, jobNote, jobPayment, jobStop, jobTruckAssignment, storageItem, storageRecord, truck } from "@/db/app-schema";
+import { auditLog, crew, employee, employeeCompensation, employeeTimeLog, job, jobCharge, jobContract, jobCrewAssignment, jobDamage, jobEmployeeAssignment, jobNote, jobPayment, jobStop, jobTruckAssignment, storageItem, storageRecord, truck } from "@/db/app-schema";
 import { requireTenantRole } from "@/lib/tenant";
 import { rangesOverlap } from "@/lib/scheduling";
 
@@ -57,6 +57,52 @@ export async function createTruck(formData: FormData) {
   await db.insert(truck).values({ organizationId: tenant.organization.id, unitNumber, truckType, capacity });
   revalidatePath("/app/jobs");
   revalidatePath("/app/settings");
+}
+
+export async function saveEmployeeCompensation(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin"]);
+  const employeeId = id.parse(formData.get("employeeId"));
+  const payType = z.enum(["hourly", "salary", "contract"]).parse(formData.get("payType"));
+  const baseRate = z.coerce.number().finite().min(0).max(10000000).parse(formData.get("baseRate"));
+  const overtimeMultiplier = z.coerce.number().finite().min(0).max(10).parse(formData.get("overtimeMultiplier"));
+  const notes = text(1000).parse(formData.get("notes") || "") || null;
+  const [ownedEmployee] = await db.select({ id: employee.id }).from(employee).where(and(eq(employee.id, employeeId), eq(employee.organizationId, tenant.organization.id))).limit(1);
+  if (!ownedEmployee) throw new Error("Employee not found in this company.");
+  await db.insert(employeeCompensation).values({ organizationId: tenant.organization.id, employeeId, payType, baseRate: baseRate.toFixed(2), overtimeMultiplier: overtimeMultiplier.toFixed(3), notes }).onConflictDoUpdate({ target: employeeCompensation.employeeId, set: { payType, baseRate: baseRate.toFixed(2), overtimeMultiplier: overtimeMultiplier.toFixed(3), notes, updatedAt: new Date() } });
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "employee.compensation_updated", entityType: "employee", entityId: employeeId, metadata: { payType, baseRate } });
+  revalidatePath("/app/employees");
+}
+
+export async function createEmployeeTimeLog(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const employeeId = id.parse(formData.get("employeeId"));
+  const jobIdValue = formData.get("jobId")?.toString() || "";
+  const jobIdValueParsed = jobIdValue ? id.parse(jobIdValue) : null;
+  const payCode = z.enum(["regular", "overtime", "pto", "training"]).parse(formData.get("payCode"));
+  const clockInValue = dateInput.parse(formData.get("clockIn"));
+  const clockOutValue = dateInput.parse(formData.get("clockOut") || "");
+  const notes = text(2000).parse(formData.get("notes") || "") || null;
+  if (!clockInValue) throw new Error("Clock-in time is required.");
+  if (clockOutValue && new Date(clockOutValue) <= new Date(clockInValue)) throw new Error("Clock-out must be after clock-in.");
+  const [ownedEmployee] = await db.select({ id: employee.id }).from(employee).where(and(eq(employee.id, employeeId), eq(employee.organizationId, tenant.organization.id), eq(employee.active, true))).limit(1);
+  if (!ownedEmployee) throw new Error("Employee not found in this company.");
+  if (jobIdValueParsed) {
+    const [ownedJob] = await db.select({ id: job.id }).from(job).where(and(eq(job.id, jobIdValueParsed), eq(job.organizationId, tenant.organization.id))).limit(1);
+    if (!ownedJob) throw new Error("Job not found in this company.");
+  }
+  const [created] = await db.insert(employeeTimeLog).values({ organizationId: tenant.organization.id, employeeId, jobId: jobIdValueParsed, payCode, clockIn: new Date(clockInValue), clockOut: clockOutValue ? new Date(clockOutValue) : null, notes }).returning({ id: employeeTimeLog.id });
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "employee.time_log_created", entityType: "employee_time_log", entityId: created.id, metadata: { employeeId, jobId: jobIdValueParsed, payCode } });
+  revalidatePath("/app/employees");
+}
+
+export async function updateEmployeeTimeLogStatus(formData: FormData) {
+  const tenant = await requireTenantRole(["owner", "admin"]);
+  const timeLogId = id.parse(formData.get("timeLogId"));
+  const status = z.enum(["submitted", "approved", "rejected"]).parse(formData.get("status"));
+  const [updated] = await db.update(employeeTimeLog).set({ status, updatedAt: new Date() }).where(and(eq(employeeTimeLog.id, timeLogId), eq(employeeTimeLog.organizationId, tenant.organization.id))).returning({ id: employeeTimeLog.id });
+  if (!updated) return;
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action: "employee.time_log_status_changed", entityType: "employee_time_log", entityId: timeLogId, metadata: { status } });
+  revalidatePath("/app/employees");
 }
 
 export async function assignEmployee(formData: FormData) {
