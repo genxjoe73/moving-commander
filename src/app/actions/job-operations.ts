@@ -141,6 +141,29 @@ export async function assignTruck(formData: FormData) {
   revalidatePath(`/app/jobs/${currentJobId}`);
 }
 
+async function removeAssignment(formData: FormData, assignmentTable: typeof jobCrewAssignment | typeof jobEmployeeAssignment | typeof jobTruckAssignment, action: string) {
+  const tenant = await requireTenantRole(["owner", "admin", "member"]);
+  const currentJobId = jobId(formData);
+  const assignmentId = id.parse(formData.get("assignmentId"));
+  const [removed] = await db.delete(assignmentTable).where(and(eq(assignmentTable.id, assignmentId), eq(assignmentTable.jobId, currentJobId), eq(assignmentTable.organizationId, tenant.organization.id))).returning({ id: assignmentTable.id });
+  if (!removed) return;
+  await db.insert(auditLog).values({ organizationId: tenant.organization.id, userId: tenant.session.user.id, action, entityType: "job", entityId: currentJobId, metadata: { assignmentId } });
+  revalidatePath(`/app/jobs/${currentJobId}`);
+  revalidatePath(`/app/jobs/${currentJobId}/dispatch`);
+}
+
+export async function removeCrewAssignment(formData: FormData) {
+  return removeAssignment(formData, jobCrewAssignment, "job.crew_unassigned");
+}
+
+export async function removeEmployeeAssignment(formData: FormData) {
+  return removeAssignment(formData, jobEmployeeAssignment, "job.employee_unassigned");
+}
+
+export async function removeTruckAssignment(formData: FormData) {
+  return removeAssignment(formData, jobTruckAssignment, "job.truck_unassigned");
+}
+
 export async function addJobStop(formData: FormData) {
   const tenant = await requireTenantRole(["owner", "admin", "member"]);
   const currentJobId = jobId(formData);
